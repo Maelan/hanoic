@@ -121,8 +121,6 @@ void*  brainProc
 	Signal* sig;
 	bool again;
 	
-	//printf("Bien le bonjour de la tête !\n");
-	
 	again = true;
 	while(again) {
 		sig = waitSignal(self);
@@ -145,6 +143,5 @@ void*  brainProc
 		destroySignal(sig);
 	}
 	
-	//printf("Au plaisir de vous revoir !\n");
 	pthread_exit(NULL);
 }

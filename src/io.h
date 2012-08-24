@@ -20,6 +20,15 @@
 
 
 
+#define  PLAYWIN_X   1
+#define  PLAYWIN_Y  20
+#define  PLAYWIN_W  (80 - PLAYWIN_X)
+#define  PLAYWIN_H  (MAX_N + GAP_Y + 1)
+#define  GAP_X      ( (PLAYWIN_W - 3*(2*MAX_N+1)) / 2 )
+#define  GAP_Y       2
+
+
+
 typedef struct {
 	unsigned h[3];
 	char pegs[3][MAX_N+1];

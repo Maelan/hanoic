@@ -15,6 +15,10 @@
 
 
 
+static WINDOW*  playWin = NULL;
+
+
+
 static GraphicPosition  gpos = {
 	.h = { 0, 0, 0 }
 };
@@ -28,55 +32,36 @@ static Selection  sel = {
 
 
 
-static void  updatePosition
-  (Position const* pos)
-{
-	gpos.h[0] = 0;
-	gpos.h[1] = 0;
-	gpos.h[2] = 0;
-	
-	for(unsigned i = 0;  i < pos->n;  i++)
-		gpos.pegs[pos->pos[i]-1][gpos.h[pos->pos[i]-1]++] = pos->n-i;    /* RoOooOoock! */
-}
-
-
-
 static void  drawDisk
-  (unsigned peg, unsigned h, unsigned n, bool draw)
+  (unsigned n, unsigned peg, unsigned h, bool draw)
 {
-	unsigned const xoff = 1, yoff = 10;
-	
-	/*(draw?attron:attroff)(COLOR_PAIR(n%8));
-	mvprintw(yoff+MAX_N-h, xoff+(2*MAX_N+1+2)*(peg-1),  "<-- %u -->", n);
-	(draw?attroff:attron)(COLOR_PAIR(n%8));*/
-	
-	mvprintw(yoff+MAX_N-h, xoff+(2*MAX_N+1+2)*(peg-1),  "%u", n);
-	mvchgat(yoff+MAX_N-h, xoff+(2*MAX_N+1+2)*(peg-1)+MAX_N-n,
-	  2*n+1, A_NORMAL, (draw ? n%8 : 0), NULL);
-	refresh();
+	wmove(playWin, PLAYWIN_H-1-h, (2*MAX_N+1+GAP_X)*(peg-1)+MAX_N+n-(n>9));
+	if(draw)
+		wprintw(playWin, "%u", n);
+	else
+		wprintw(playWin, "  ");
+	mvwchgat(playWin, PLAYWIN_H-1-h, (2*MAX_N+1+GAP_X)*(peg-1)+MAX_N-n,
+	  2*n+1, (draw ? A_BOLD : A_NORMAL), (draw ? n%8+1 : 0), NULL);
+	wrefresh(playWin);
 }
 
 
 
-static void  drawMove
-  (/*Move const* mv*/unsigned n, unsigned src, unsigned hSrc, unsigned dest, unsigned hDest)
+static void  teleportDisk
+  (unsigned n, unsigned src, unsigned hSrc, unsigned dest, unsigned hDest)
 {
-	/*drawDisk(mv->src-1, gpos.h[mv->src-1], gpos.pegs[mv->src-1][gpos.h[mv->src-1]-1], false);
-	drawDisk(mv->dest-1, gpos.h[mv->dest-1], gpos.pegs[mv->src-1][gpos.h[mv->src-1]-1], true);*/
-	drawDisk(src-1, hSrc, n, false);
-	drawDisk(dest-1, hDest, n, true);
+	drawDisk(n, src, hSrc, false);
+	drawDisk(n, dest, hDest, true);
 }
 
 
 
-static void  drawPosition
-  (void)
+static void  moveDisk
+  (Move const* mv)
 {
-	clear();
-	
-	for(unsigned i = 0;  i < 3;  i++)
-		for(unsigned j = 0;  j < gpos.h[i];  j++)
-			drawDisk(i+1, j+1, gpos.pegs[i][j], true);
+	teleportDisk( gpos.pegs[mv->src-1][gpos.h[mv->src-1]-1],
+	  mv->src, gpos.h[mv->src-1],
+	  mv->dest, gpos.h[mv->dest-1] );
 }
 
 
@@ -84,13 +69,14 @@ static void  drawPosition
 static void  select
   (void)
 {
+	if(!gpos.h[sel.cur-1])
+		return;
+	
 	sel.orig = sel.cur;
 	sel.n = gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1];
 	gpos.h[sel.cur-1]--;
 	
-	/*drawDisk(sel.cur-1, gpos.h[sel.cur-1]+1, sel.n, false);
-	drawDisk(sel.cur-1, MAX_N+1, sel.n, true);*/
-	drawMove(sel.n, sel.cur, gpos.h[sel.cur-1], sel.cur, MAX_N+1);
+	teleportDisk(sel.n, sel.cur, gpos.h[sel.cur-1]+1, sel.cur, MAX_N+GAP_Y);
 }
 
 
@@ -98,16 +84,62 @@ static void  select
 static void  release
   (void)
 {
-	if(gpos.h[sel.cur]  &&  sel.n > gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1])
+	if(gpos.h[sel.cur-1]  &&  sel.n > gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1])
 		return;
 	
-	/*drawDisk(sel.orig-1, MAX_N+1, sel.n, false);
-	drawDisk(sel.cur-1, gpos.h[sel.cur-1]+1, sel.n, true);*/
-	drawMove(sel.n, sel.orig, MAX_N+1, sel.cur, gpos.h[sel.cur-1]+1);
+	teleportDisk(sel.n, sel.orig, MAX_N+GAP_Y, sel.cur, gpos.h[sel.cur-1]+1);
 	
 	gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]] = sel.n;
 	gpos.h[sel.cur-1]++;
 	sel.n = 0;
+}
+
+
+
+static void  toggleSelected
+  (void)
+{
+	if(sel.n)
+		release();
+	else
+		select();
+}
+
+
+
+static void  moveCursor
+  (unsigned newCur)
+{
+	mvwhline(playWin, PLAYWIN_H-1, (2*MAX_N+1+GAP_X)*(sel.cur-1), ' ', 2*MAX_N+1);
+	mvwhline(playWin, PLAYWIN_H-1, (2*MAX_N+1+GAP_X)*(newCur-1), 0, 2*MAX_N+1);
+	wrefresh(playWin);
+	
+	sel.cur = newCur;
+}
+
+
+
+static void  updatePosition
+  (Position const* pos)
+{
+	/* Update the position datas. */
+	gpos.h[0] = 0;
+	gpos.h[1] = 0;
+	gpos.h[2] = 0;
+	for(unsigned i = 0;  i < pos->n;  i++)
+		gpos.pegs[pos->pos[i]-1][gpos.h[pos->pos[i]-1]++] = pos->n-i;    /* RoOooOoock! */
+	
+	clear();
+	/* Draw the 3 pegs. */
+	for(unsigned i = 0;  i < 3;  i++)
+		mvwvline(playWin, GAP_Y, (2*MAX_N+1+GAP_X)*i + MAX_N, '|', MAX_N);
+	/* Draw the disks. */
+	for(unsigned i = 0;  i < 3;  i++)
+		for(unsigned j = 0;  j < gpos.h[i];  j++)
+			drawDisk(gpos.pegs[i][j], i+1, j+1, true);
+	/*  Show the cursor.*/
+	moveCursor(1);
+	wrefresh(playWin);
 }
 
 
@@ -120,11 +152,10 @@ void*  ioProc
 	int c;
 	bool again;
 	
-	printf("Kikoo c tro bi1 ici\n");
-	
 	/* initialisations. */
 	initscr();
 	/* Input initializations. */
+	timeout(0);
 	cbreak();
 	keypad(stdscr, true);
 	mousemask(BUTTON1_CLICKED, NULL);
@@ -133,9 +164,12 @@ void*  ioProc
 	/* Output initializations. */
 	start_color();
 	use_default_colors();
-	for(int i = 1;  i <= 9; ++i)
-		init_pair(i, -1, i);
+	for(int i = 0;  i < 8; ++i)
+		init_pair(i+1, i, i);
 	refresh();
+	
+	playWin = newwin(PLAYWIN_H, PLAYWIN_W, PLAYWIN_Y, PLAYWIN_X);
+	keypad(playWin, true);
 	
 	again = true;
 	while(again) {
@@ -148,10 +182,9 @@ void*  ioProc
 				break;
 			  case SIG_NEWPOS:
 				updatePosition(&sig->pos);
-				drawPosition();
 				break;
 			  case SIG_NEWMOVE:
-				//drawMove(&sig->mv);
+				moveDisk(&sig->mv);
 				break;
 			  default:
 				break;
@@ -160,7 +193,7 @@ void*  ioProc
 			destroySignal(sig);
 		}
 		
-		c = getch();
+		c = wgetch(playWin);
 		switch(c) {
 		  case 'q':
 			send.type = SIG_END;
@@ -168,16 +201,24 @@ void*  ioProc
 			again = false;
 			break;
 		  case ' ':
-			if(sel.n)
-				release();
-			else
-				select();
+			toggleSelected();
+			break;
+		  case '4':
+		  case '5':
+		  case '6':
+			moveCursor(c-'3');
+			toggleSelected();
 			break;
 		  case '1':
 		  case '2':
 		  case '3':
-			sel.cur = c-'0';
-			mvprintw(1,1, "%u (#%u)", sel.cur, sel.n);
+			moveCursor(c-'0');
+			break;
+		  case KEY_LEFT:
+			moveCursor((sel.cur==1) ? 3 : sel.cur-1);
+			break;
+		  case KEY_RIGHT:
+			moveCursor(sel.cur%3 + 1);
 			break;
 		  default:
 			break;
@@ -186,6 +227,5 @@ void*  ioProc
 	
 	endwin();
 	
-	printf("slt a+!!!\n");
 	pthread_exit(NULL);
 }

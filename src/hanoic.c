@@ -29,7 +29,9 @@ int  main
 	startThread(&io, ioProc);
 	
 	sig.type = SIG_NEWPOS;
-	sig.pos = (Position){ 4, "\1\1\3\1" };
+	//sig.pos = (Position){ 4, "\1\1\3\1" };
+	sig.pos = (Position){ MAX_N, "\1\2\3\1\2\3\1\2\3\1\2\3\1\2\3" };
+	//sig.pos = (Position){ MAX_N, "\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1" };
 	sendSignal(&brain, &sig);
 	
 	sig.type = SIG_NEWMOVE;
