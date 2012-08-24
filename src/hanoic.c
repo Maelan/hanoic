@@ -31,7 +31,7 @@ int  main
 	if(ac > 1) {
 		unsigned i;
 		for(i = 0;  av[1][i];  i++) {
-			if(i > MAX_N) {
+			if(i == MAX_N) {
 				fprintf(stderr, "Error: too many disks (max. %u).\n", MAX_N);
 				return EXIT_FAILURE;
 			}

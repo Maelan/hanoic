@@ -11,11 +11,10 @@
 #ifndef INCLUDED_HANOIC_THREADS_2012_08_20_19_31_MM
 #define INCLUDED_HANOIC_THREADS_2012_08_20_19_31_MM
 
-#include "hanoic.h"
+#include "datas.h"
 #include <pthread.h>
 #include <stdio.h>     /* perror */
 #include <stdlib.h>    /* malloc/free */
-#include <string.h>    /* memcpy */
 
 
 
@@ -60,12 +59,6 @@ typedef struct {
 	SignalQueue sigq;
 	Procedure proc;
 } Thread;
-
-
-
-
-
-extern Thread  brain, io;
 
 
 

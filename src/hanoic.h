@@ -13,35 +13,18 @@
 
 
 
-#define  MAX_N        12
-#define  DEFAULT_N     4
-#define  DEFAULT_POS  "\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1"
-
-
-
-typedef struct Move {
-	char src, dest;
-	//unsigned char n;
-} Move;
-
-
-
-typedef struct {
-	unsigned n;
-	char const* pos;
-} Position;
-
-
-
+#include "datas.h"
 #include "threads.h"
 #include "brain.h"    /* That’s better. */
 #include "io.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 
 
 
 
-//extern Thread  brain, io;
+extern Thread  brain, io;
 
 
 

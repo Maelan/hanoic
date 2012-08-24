@@ -112,7 +112,7 @@ void  sendSignal
 		perror("Memory (malloc) error");
 		return;
 	}
-	memcpy(sig2, sig, sizeof(*sig));
+	*sig2 = *sig;
 	sig2->next = NULL;
 	
 	pthread_mutex_lock(&thread->sigq.mutex);
