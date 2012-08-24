@@ -59,8 +59,13 @@ static void  teleportDisk
 static void  moveDisk
   (Move const* mv)
 {
-	teleportDisk( gpos.pegs[mv->src-1][gpos.h[mv->src-1]-1],
-	  mv->src, gpos.h[mv->src-1],
+	unsigned n = gpos.pegs[mv->src-1][gpos.h[mv->src-1]-1];
+	gpos.h[mv->src-1]--;
+	gpos.h[mv->dest-1]++;
+	gpos.pegs[mv->dest-1][gpos.h[mv->dest-1]-1] = n;
+	
+	teleportDisk( n,
+	  mv->src, gpos.h[mv->src-1]+1,
 	  mv->dest, gpos.h[mv->dest-1] );
 }
 
@@ -145,7 +150,7 @@ static void  updatePosition
 	for(unsigned i = 0;  i < 3;  i++)
 		for(unsigned j = 0;  j < gpos.h[i];  j++)
 			drawDisk(gpos.pegs[i][j], i+1, j+1, true);
-	/*  Show the cursor.*/
+	/*  Show the “cursor”.*/
 	moveCursor(1);
 	wrefresh(playWin);
 }
@@ -157,8 +162,8 @@ void*  ioProc
 {
 	Signal* sig;
 	Signal send;
-	int c;
 	bool again;
+	int c;
 	
 	initscr();
 	/* Input settings. */
@@ -188,9 +193,11 @@ void*  ioProc
 				again = false;
 				break;
 			  case SIG_NEWPOS:
+				sendSignal(&brain, sig);
 				updatePosition(&sig->pos);
 				break;
 			  case SIG_NEWMOVE:
+				sendSignal(&brain, sig);
 				moveDisk(&sig->mv);
 				break;
 			  default:
@@ -226,6 +233,10 @@ void*  ioProc
 			break;
 		  case KEY_RIGHT:
 			moveCursor(sel.cur%3 + 1);
+			break;
+		  case 's':
+			send.type = SIG_NEXTMOVE;
+			sendSignal(&brain, &send);
 			break;
 		  default:
 			break;

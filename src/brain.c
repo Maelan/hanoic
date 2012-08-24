@@ -119,6 +119,7 @@ void*  brainProc
   (void* self)
 {
 	Signal* sig;
+	Signal send;
 	bool again;
 	
 	again = true;
@@ -130,11 +131,17 @@ void*  brainProc
 			again = false;
 			break;
 		  case SIG_NEWPOS:
-			sendSignal(&io, sig);
 			solve(sig->pos.n, sig->pos.pos, 3);
 			break;
 		  case SIG_NEWMOVE:
 			updateMoves(&sig->mv);
+			break;
+		  case SIG_NEXTMOVE:
+			if(moves.cur < MAX_MOVES) {
+				send.type = SIG_NEWMOVE;
+				send.mv = moves.mv[moves.cur];
+				sendSignal(&io, &send);
+			}
 			break;
 		  default:
 			break;

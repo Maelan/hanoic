@@ -25,6 +25,8 @@ typedef enum {
 	SIG_END,
 	SIG_NEWPOS,
 	SIG_NEWMOVE,
+	SIG_NEXTMOVE,
+	SIG_INFOUPDATE,
 	SIG_LAST
 } SignalType;
 

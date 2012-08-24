@@ -57,7 +57,7 @@ int  main
 	startThread(&io, ioProc);
 	
 	/* Init the position. */
-	sendSignal(&brain, &sig);
+	sendSignal(&io, &sig);
 	
 	/* End. */
 	waitThread(&brain);
