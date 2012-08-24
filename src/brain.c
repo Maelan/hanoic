@@ -103,7 +103,7 @@ static unsigned  solve
 static void  updateMoves
   (Move const* mv)
 {
-	if(mv->src == moves.mv[moves.cur].src) {
+	if(moves.cur < MAX_MOVES  &&  mv->src == moves.mv[moves.cur].src) {
 		if(mv->dest == moves.mv[moves.cur].dest)
 			pullMove();
 		else

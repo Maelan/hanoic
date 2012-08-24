@@ -89,6 +89,14 @@ static void  release
 	
 	teleportDisk(sel.n, sel.orig, MAX_N+GAP_Y, sel.cur, gpos.h[sel.cur-1]+1);
 	
+	if(sel.cur != sel.orig) {
+		Signal sig = {
+			.type = SIG_NEWMOVE,
+			.mv = { .src = sel.orig, .dest = sel.cur }
+		};
+		sendSignal(&brain, &sig);
+	}
+	
 	gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]] = sel.n;
 	gpos.h[sel.cur-1]++;
 	sel.n = 0;
@@ -152,16 +160,15 @@ void*  ioProc
 	int c;
 	bool again;
 	
-	/* initialisations. */
 	initscr();
-	/* Input initializations. */
+	/* Input settings. */
 	timeout(0);
 	cbreak();
 	keypad(stdscr, true);
 	mousemask(BUTTON1_CLICKED, NULL);
 	noecho();
 	curs_set(0);
-	/* Output initializations. */
+	/* Output settings. */
 	start_color();
 	use_default_colors();
 	for(int i = 0;  i < 8; ++i)
@@ -174,7 +181,7 @@ void*  ioProc
 	again = true;
 	while(again) {
 		sig = getSignal(self);
-
+		
 		if(sig) {
 			switch(sig->type) {
 			  case SIG_END:

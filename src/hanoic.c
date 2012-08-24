@@ -25,29 +25,42 @@ int  main
 {
 	Signal sig;
 	
+	sig.type = SIG_NEWPOS;
+	
+	/* Parse the position format passed via the command-line. */
+	if(ac > 1) {
+		unsigned i;
+		for(i = 0;  av[1][i];  i++) {
+			if(i > MAX_N) {
+				fprintf(stderr, "Error: too many disks (max. %u).\n", MAX_N);
+				return EXIT_FAILURE;
+			}
+			else if(av[1][i] < '1'  ||  av[1][i] > '3') {
+				fprintf(stderr,
+				  "Error: incorrect position format. This must be a sequence of"
+				  " digits from 1 to 3 exclusively.\n");
+				return EXIT_FAILURE;
+			}
+			else
+				av[1][i] -= '0';
+		}
+		sig.pos.n =   i;
+		sig.pos.pos = av[1];
+	}
+	else {
+		sig.pos.n =   DEFAULT_N;
+		sig.pos.pos = DEFAULT_POS;
+	}
+		
+	/* Start the game. */
 	startThread(&brain, brainProc);
 	startThread(&io, ioProc);
 	
-	sig.type = SIG_NEWPOS;
-	//sig.pos = (Position){ 4, "\1\1\3\1" };
-	sig.pos = (Position){ MAX_N, "\1\2\3\1\2\3\1\2\3\1\2\3\1\2\3" };
-	//sig.pos = (Position){ MAX_N, "\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1" };
+	/* Init the position. */
 	sendSignal(&brain, &sig);
 	
-	sig.type = SIG_NEWMOVE;
-	sig.mv = (Move){ 3, 2 };
-	sendSignal(&brain, &sig);
-	sig.mv = (Move){ 2, 3 };
-	sendSignal(&brain, &sig);
-	sig.mv = (Move){ 1, 2 };
-	sendSignal(&brain, &sig);
-	sig.mv = (Move){ 2, 3 };
-	sendSignal(&brain, &sig);
-	
-	sig.type = SIG_END;
-	sendSignal(&brain, &sig);
-	
+	/* End. */
 	waitThread(&brain);
 	waitThread(&io);
-	return 0;
+	return EXIT_SUCCESS;
 }

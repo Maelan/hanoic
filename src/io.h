@@ -20,7 +20,7 @@
 
 
 
-#define  PLAYWIN_X   1
+#define  PLAYWIN_X  10
 #define  PLAYWIN_Y  20
 #define  PLAYWIN_W  (80 - PLAYWIN_X)
 #define  PLAYWIN_H  (MAX_N + GAP_Y + 1)

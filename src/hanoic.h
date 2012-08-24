@@ -13,8 +13,9 @@
 
 
 
-#define  MAX_N      12
-#define  DEFAULT_N  4
+#define  MAX_N        12
+#define  DEFAULT_N     4
+#define  DEFAULT_POS  "\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1"
 
 
 
@@ -27,7 +28,7 @@ typedef struct Move {
 
 typedef struct {
 	unsigned n;
-	char* pos;
+	char const* pos;
 } Position;
 
 
