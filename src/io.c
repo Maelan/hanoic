@@ -15,6 +15,7 @@
 
 
 
+static WINDOW*  statsWin = NULL;
 static WINDOW*  playWin = NULL;
 
 
@@ -29,6 +30,30 @@ static Selection  sel = {
 	.n = 0,
 	.cur = 1
 };
+
+
+
+static void  updateStats
+  (Statistics const* stats)
+{
+	wclear(statsWin);
+	
+	wprintw(statsWin,
+	  "   you %2u | %2u  optimal solution\n"
+	  "errors %2u | %2u  from now",
+	  stats->done, stats->initial, stats->errors, stats->fromNow);
+	
+	/* Emphasis over “you” and “optimal”. */
+	mvwchgat(statsWin, 0,  3,  3, A_BOLD, 0, NULL);    /* “you” */
+	mvwchgat(statsWin, 0, 16,  7, A_BOLD, 0, NULL);    /* “optimal” */
+	/* Color over the numbers. :) */
+	mvwchgat(statsWin, 0,  7,  2, A_BOLD, 10, NULL);    /* you */
+	mvwchgat(statsWin, 1,  7,  2, A_BOLD, 11, NULL);    /* errors */
+	mvwchgat(statsWin, 0, 12,  2, A_BOLD, 12, NULL);    /* optimal */
+	mvwchgat(statsWin, 1, 12,  2, A_BOLD, 13, NULL);    /* from now */
+	
+	wrefresh(statsWin);
+}
 
 
 
@@ -142,7 +167,7 @@ static void  updatePosition
 	for(unsigned i = 0;  i < pos->n;  i++)
 		gpos.pegs[pos->pos[i]-1][gpos.h[pos->pos[i]-1]++] = pos->n-i;    /* RoOooOoock! */
 	
-	clear();
+	wclear(playWin);
 	/* Draw the 3 pegs. */
 	for(unsigned i = 0;  i < 3;  i++)
 		mvwvline(playWin, GAP_Y, (2*MAX_N+1+GAP_X)*i + MAX_N, '|', MAX_N);
@@ -167,21 +192,26 @@ void*  ioProc
 	
 	initscr();
 	/* Input settings. */
-	timeout(0);
 	cbreak();
-	keypad(stdscr, true);
-	mousemask(BUTTON1_CLICKED, NULL);
+	//keypad(stdscr, true);
+	//mousemask(BUTTON1_CLICKED, NULL);
 	noecho();
 	curs_set(0);
 	/* Output settings. */
 	start_color();
 	use_default_colors();
-	for(int i = 0;  i < 8; ++i)
+	for(int i = 0;  i < 8; ++i)    /* 8 color pairs for the disks */
 		init_pair(i+1, i, i);
+	init_pair(10, COLOR_YELLOW, -1);    /* color pairs for statistics */
+	init_pair(11, COLOR_GREEN,  -1);    /* … */
+	init_pair(12, COLOR_RED,    -1);    /* … */
+	init_pair(13, COLOR_BLUE,   -1);    /* … */
 	refresh();
 	
 	playWin = newwin(PLAYWIN_H, PLAYWIN_W, PLAYWIN_Y, PLAYWIN_X);
 	keypad(playWin, true);
+	nodelay(playWin, true);
+	statsWin = newwin(STATSWIN_H, STATSWIN_W, STATSWIN_Y, STATSWIN_X);
 	
 	again = true;
 	while(again) {
@@ -199,6 +229,9 @@ void*  ioProc
 			  case SIG_NEWMOVE:
 				sendSignal(&brain, sig);
 				moveDisk(&sig->mv);
+				break;
+			  case SIG_STATSUPDATE:
+				updateStats(&sig->stats);
 				break;
 			  default:
 				break;
@@ -243,6 +276,8 @@ void*  ioProc
 		}
 	}
 	
+	delwin(statsWin);
+	delwin(playWin);
 	endwin();
 	
 	pthread_exit(NULL);

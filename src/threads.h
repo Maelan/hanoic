@@ -25,7 +25,7 @@ typedef enum {
 	SIG_NEWPOS,
 	SIG_NEWMOVE,
 	SIG_NEXTMOVE,
-	SIG_INFOUPDATE,
+	SIG_STATSUPDATE,
 	SIG_LAST
 } SignalType;
 
@@ -37,6 +37,7 @@ typedef struct Signal {
 	union {
 		Position pos;
 		Move mv;
+		Statistics stats;
 	} ;
 } Signal;
 

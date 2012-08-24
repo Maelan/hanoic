@@ -21,21 +21,29 @@
 
 
 
+/* A move (ie. moving a disk from one peg to another). */
 typedef struct Move {
-	char src, dest;
-	//unsigned char n;
+	char src, dest;     /* the source and destination pegs (numbers from 1 to 3) */
+	//unsigned char n;    /* the number of the disk to be moved */
 } Move;
 
 
 
+/* A position. */
 typedef struct {
-	unsigned n;
-	char const* pos;
+	unsigned n;         /* number of disks */
+	char const* pos;    /* array of numbers from 1 to 3 describing the position */
 } Position;
 
 
 
-/*§*/
+/* Statistics about the game. */
+typedef struct {
+	unsigned initial,    /* optimal number of moves at the beginning */
+	         fromNow,    /* optimal number of moves from now */
+	         done,       /* moves played since the beginning */
+	         errors;     /* “bad” moves (ie. not the expected ones) played */
+} Statistics;
 
 
 

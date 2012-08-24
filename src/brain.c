@@ -14,7 +14,11 @@
 
 
 
-static MoveStack  moves = {
+static Statistics  stats;    /* Uuh? */
+
+
+
+static MoveStack  solution = {
 	.cur = MAX_MOVES
 };
 
@@ -25,20 +29,18 @@ static MoveStack  moves = {
 static void  addMove
   (int src, int dest/*, unsigned n*/)
 {
-	moves.cur--;
-	moves.mv[moves.cur].src =  src;
-	moves.mv[moves.cur].dest = dest;
-	//moves.mv[moves.cur].n =    n;
+	solution.cur--;
+	solution.mv[solution.cur].src =  src;
+	solution.mv[solution.cur].dest = dest;
+	//solution.mv[solution.cur].n =    n;
 }
-
-
 
 
 
 static void  pullMove
   (void)
 {
-	moves.cur++;
+	solution.cur++;
 }
 
 
@@ -103,11 +105,11 @@ static unsigned  solve
 static void  updateMoves
   (Move const* mv)
 {
-	if(moves.cur < MAX_MOVES  &&  mv->src == moves.mv[moves.cur].src) {
-		if(mv->dest == moves.mv[moves.cur].dest)
+	if(solution.cur < MAX_MOVES  &&  mv->src == solution.mv[solution.cur].src) {
+		if(mv->dest == solution.mv[solution.cur].dest)
 			pullMove();
 		else
-			moves.mv[moves.cur].src = mv->dest;
+			solution.mv[solution.cur].src = mv->dest;
 	}
 	else
 		addMove(mv->dest, mv->src/*, mv->n*/);
@@ -131,15 +133,28 @@ void*  brainProc
 			again = false;
 			break;
 		  case SIG_NEWPOS:
-			solve(sig->pos.n, sig->pos.pos, 3);
+			stats.initial = solve(sig->pos.n, sig->pos.pos, 3);
+			stats.fromNow = MAX_MOVES - solution.cur;
+			stats.done = 0;
+			stats.errors = 0;
+			send.type = SIG_STATSUPDATE;
+			send.stats = stats;
+			sendSignal(&io, &send);
 			break;
 		  case SIG_NEWMOVE:
 			updateMoves(&sig->mv);
+			stats.done++;
+			if(stats.fromNow-1 != MAX_MOVES - solution.cur)
+				stats.errors++;
+			stats.fromNow = MAX_MOVES - solution.cur;
+			send.type = SIG_STATSUPDATE;
+			send.stats = stats;
+			sendSignal(&io, &send);
 			break;
 		  case SIG_NEXTMOVE:
-			if(moves.cur < MAX_MOVES) {
+			if(solution.cur < MAX_MOVES) {
 				send.type = SIG_NEWMOVE;
-				send.mv = moves.mv[moves.cur];
+				send.mv = solution.mv[solution.cur];
 				sendSignal(&io, &send);
 			}
 			break;
