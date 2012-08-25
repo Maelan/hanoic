@@ -133,6 +133,7 @@ void*  brainProc
 			again = false;
 			break;
 		  case SIG_NEWPOS:
+			solution.cur = MAX_MOVES;
 			stats.initial = solve(sig->pos.n, sig->pos.pos, 3);
 			stats.fromNow = MAX_MOVES - solution.cur;
 			stats.done = 0;

@@ -50,7 +50,7 @@ void  endNumWin
 
 
 
-void  printNumber
+void  updateNumber
   (unsigned n)
 {
 	char buf[10];

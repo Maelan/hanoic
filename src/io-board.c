@@ -57,7 +57,8 @@ void  endBoardWin
 void  updateBoard
   (Position const* pos)
 {
-	/* Update the position datas. */
+	/* Update the datas. */
+	gpos.n = pos->n;
 	gpos.h[0] = 0;
 	gpos.h[1] = 0;
 	gpos.h[2] = 0;

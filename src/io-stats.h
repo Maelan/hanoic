@@ -13,7 +13,6 @@
 #define INCLUDED_HANOIC_IO_STATS_2012_08_20_19_31_MM
 
 #include "io.h"
-#include "hanoic.h"
 #include <ncurses.h>
 
 
@@ -39,7 +38,7 @@ void  endStatsWin
 	(void);
 
 
-void  updateStatitsics
+void  updateStatistics
   (Statistics const* stats);
 
 

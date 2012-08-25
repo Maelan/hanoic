@@ -15,6 +15,43 @@
 
 
 
+static void  initialPosition
+  (Position* pos)
+{
+	pos->pos = DEFAULT_POS;
+	pos->n =   gpos.n;
+}
+
+
+
+static void  randomPosition
+  (Position* pos)
+{
+	static char buf[MAX_N];
+	
+	for(unsigned i = 0;  i < gpos.n;  i++)
+		buf[i] = rand()%3 + 1;
+	
+	pos->pos = buf;
+	pos->n =   gpos.n;
+}
+
+
+
+static void  resetPosition
+  (char mode)
+{
+	Signal sig;
+	
+	((mode == 'i') ? initialPosition:randomPosition) (&sig.pos);
+	
+	sig.type = SIG_NEWPOS;
+	sendSignal(&brain, &sig);
+	sendSignal(&io, &sig);
+}
+
+
+
 void*  ioProc
   (void* self)
 {
@@ -56,7 +93,7 @@ void*  ioProc
 			switch(sig->type) {
 			  case SIG_NEWPOS:
 				sendSignal(&brain, sig);
-				printNumber(sig->pos.n);
+				updateNumber(sig->pos.n);
 				updateBoard(&sig->pos);
 				break;
 			  case SIG_NEWMOVE:
@@ -76,12 +113,31 @@ void*  ioProc
 		c = getch();
 		//c = wgetch(boardWin);
 		switch(c) {
+		  
 		  /* Quit. */
 		  case 'q':
 			send.type = SIG_END;
 			sendSignal(&brain, &send);
 			again = false;
 			break;
+		  
+		  /* Initial or random position. */
+		  case 'i':
+		  case 'r':
+			resetPosition(c);
+			break;
+		  /* Changing N. */
+		  case '-':
+		  case '+':
+			gpos.n += (c == '+') ? +1 : -1;
+			if(gpos.n < 1)
+				gpos.n = 1;
+			else if(gpos.n > MAX_N)
+				gpos.n = MAX_N;
+			else
+				resetPosition('i');
+			break;
+		  
 		  /* Move the “cursor” (under the pegs). */
 		  case KEY_LEFT:
 			moveCursor((sel.cur==1) ? 3 : sel.cur-1);
@@ -114,6 +170,7 @@ void*  ioProc
 			attemptMove(1,3);    break;
 		  case '9':
 			attemptMove(2,3);    break;
+		  
 		  /* Play the next move of the solution. */
 		  /* FIXME: When a disk is selected, it is ignored… */
 		  case 's':

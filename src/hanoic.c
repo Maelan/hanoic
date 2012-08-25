@@ -41,6 +41,8 @@ int  main
 {
 	Signal sig;
 	
+	srand(time(NULL));
+	
 	sig.type = SIG_NEWPOS;
 	
 	/* Parse the position format passed via the command-line. */

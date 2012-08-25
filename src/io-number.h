@@ -13,7 +13,6 @@
 #define INCLUDED_HANOIC_IO_NUMBER_2012_08_20_19_31_MM
 
 #include "io.h"
-#include "hanoic.h"
 #include <ncurses.h>
 
 
@@ -39,7 +38,7 @@ void  endNumWin
 	(void);
 
 
-void  setNumber
+void  updateNumber
   (unsigned n);
 
 

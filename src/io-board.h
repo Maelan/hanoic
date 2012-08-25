@@ -35,6 +35,7 @@ extern WINDOW*  boardWin;
 
 /* A more precise description of a position (“board”), useful for drawing. */
 typedef struct {
+	unsigned n;             /* number of disks */
 	unsigned h[3];          /* “height” of (number of disks on) each peg */
 	char pegs[3][MAX_N];    /* disks stacked on the pegs */
 } GraphicPosition;
@@ -64,6 +65,7 @@ void  endBoardWin
 
 void  updateBoard
   (Position const* pos);
+
 
 
 void  drawDisk
