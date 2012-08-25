@@ -1,5 +1,5 @@
 /**
-***  io.h
+***  io-stats.h
 ***
 ***    module:   io  −  header file
 ***    function: The interaction module (thread), which listen what the user do
@@ -9,22 +9,38 @@
 ***
 **/
 
-#ifndef INCLUDED_HANOIC_IO_2012_08_20_19_31_MM
-#define INCLUDED_HANOIC_IO_2012_08_20_19_31_MM
+#ifndef INCLUDED_HANOIC_IO_STATS_2012_08_20_19_31_MM
+#define INCLUDED_HANOIC_IO_STATS_2012_08_20_19_31_MM
 
-#include "io-number.h"
-#include "io-board.h"
-#include "io-stats.h"
+#include "io.h"
 #include "hanoic.h"
 #include <ncurses.h>
-#include <stdbool.h>
 
 
 
 
 
-void*  ioProc
-  (void*);
+#define  STATSWIN_X  45
+#define  STATSWIN_Y   0
+#define  STATSWIN_W  36
+#define  STATSWIN_H   2
+
+
+
+extern WINDOW*  statsWin;
+
+
+
+void  initStatsWin
+	(void);
+
+
+void  endStatsWin
+	(void);
+
+
+void  updateStatitsics
+  (Statistics const* stats);
 
 
 

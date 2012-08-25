@@ -102,7 +102,7 @@ static unsigned  solve
 
 
 /*  */
-static void  updateMoves
+static void  updateSolution
   (Move const* mv)
 {
 	if(solution.cur < MAX_MOVES  &&  mv->src == solution.mv[solution.cur].src) {
@@ -111,7 +111,7 @@ static void  updateMoves
 		else
 			solution.mv[solution.cur].src = mv->dest;
 	}
-	else
+	else    /* FIXME: not always optimal… */
 		addMove(mv->dest, mv->src/*, mv->n*/);
 }
 
@@ -142,7 +142,7 @@ void*  brainProc
 			sendSignal(&io, &send);
 			break;
 		  case SIG_NEWMOVE:
-			updateMoves(&sig->mv);
+			updateSolution(&sig->mv);
 			stats.done++;
 			if(stats.fromNow-1 != MAX_MOVES - solution.cur)
 				stats.errors++;

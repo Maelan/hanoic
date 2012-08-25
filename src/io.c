@@ -15,173 +15,6 @@
 
 
 
-static WINDOW*  statsWin = NULL;
-static WINDOW*  playWin = NULL;
-
-
-
-static GraphicPosition  gpos = {
-	.h = { 0, 0, 0 }
-};
-
-
-
-static Selection  sel = {
-	.n = 0,
-	.cur = 1
-};
-
-
-
-static void  updateStats
-  (Statistics const* stats)
-{
-	wclear(statsWin);
-	
-	wprintw(statsWin,
-	  "   you %2u | %2u  optimal solution\n"
-	  "errors %2u | %2u  from now",
-	  stats->done, stats->initial, stats->errors, stats->fromNow);
-	
-	/* Emphasis over “you” and “optimal”. */
-	mvwchgat(statsWin, 0,  3,  3, A_BOLD, 0, NULL);    /* “you” */
-	mvwchgat(statsWin, 0, 16,  7, A_BOLD, 0, NULL);    /* “optimal” */
-	/* Color over the numbers. :) */
-	mvwchgat(statsWin, 0,  7,  2, A_BOLD, 10, NULL);    /* you */
-	mvwchgat(statsWin, 1,  7,  2, A_BOLD, 11, NULL);    /* errors */
-	mvwchgat(statsWin, 0, 12,  2, A_BOLD, 12, NULL);    /* optimal */
-	mvwchgat(statsWin, 1, 12,  2, A_BOLD, 13, NULL);    /* from now */
-	
-	wrefresh(statsWin);
-}
-
-
-
-static void  drawDisk
-  (unsigned n, unsigned peg, unsigned h, bool draw)
-{
-	wmove(playWin, PLAYWIN_H-1-h, (2*MAX_N+1+GAP_X)*(peg-1)+MAX_N+n-(n>9));
-	if(draw)
-		wprintw(playWin, "%u", n);
-	else
-		wprintw(playWin, "  ");
-	mvwchgat(playWin, PLAYWIN_H-1-h, (2*MAX_N+1+GAP_X)*(peg-1)+MAX_N-n,
-	  2*n+1, (draw ? A_BOLD : A_NORMAL), (draw ? n%8+1 : 0), NULL);
-	wrefresh(playWin);
-}
-
-
-
-static void  teleportDisk
-  (unsigned n, unsigned src, unsigned hSrc, unsigned dest, unsigned hDest)
-{
-	drawDisk(n, src, hSrc, false);
-	drawDisk(n, dest, hDest, true);
-}
-
-
-
-static void  moveDisk
-  (Move const* mv)
-{
-	unsigned n = gpos.pegs[mv->src-1][gpos.h[mv->src-1]-1];
-	gpos.h[mv->src-1]--;
-	gpos.h[mv->dest-1]++;
-	gpos.pegs[mv->dest-1][gpos.h[mv->dest-1]-1] = n;
-	
-	teleportDisk( n,
-	  mv->src, gpos.h[mv->src-1]+1,
-	  mv->dest, gpos.h[mv->dest-1] );
-}
-
-
-
-static void  select
-  (void)
-{
-	if(!gpos.h[sel.cur-1])
-		return;
-	
-	sel.orig = sel.cur;
-	sel.n = gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1];
-	gpos.h[sel.cur-1]--;
-	
-	teleportDisk(sel.n, sel.cur, gpos.h[sel.cur-1]+1, sel.cur, MAX_N+GAP_Y);
-}
-
-
-
-static void  release
-  (void)
-{
-	if(gpos.h[sel.cur-1]  &&  sel.n > gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1])
-		return;
-	
-	teleportDisk(sel.n, sel.orig, MAX_N+GAP_Y, sel.cur, gpos.h[sel.cur-1]+1);
-	
-	if(sel.cur != sel.orig) {
-		Signal sig = {
-			.type = SIG_NEWMOVE,
-			.mv = { .src = sel.orig, .dest = sel.cur }
-		};
-		sendSignal(&brain, &sig);
-	}
-	
-	gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]] = sel.n;
-	gpos.h[sel.cur-1]++;
-	sel.n = 0;
-}
-
-
-
-static void  toggleSelected
-  (void)
-{
-	if(sel.n)
-		release();
-	else
-		select();
-}
-
-
-
-static void  moveCursor
-  (unsigned newCur)
-{
-	mvwhline(playWin, PLAYWIN_H-1, (2*MAX_N+1+GAP_X)*(sel.cur-1), ' ', 2*MAX_N+1);
-	mvwhline(playWin, PLAYWIN_H-1, (2*MAX_N+1+GAP_X)*(newCur-1), 0, 2*MAX_N+1);
-	wrefresh(playWin);
-	
-	sel.cur = newCur;
-}
-
-
-
-static void  updatePosition
-  (Position const* pos)
-{
-	/* Update the position datas. */
-	gpos.h[0] = 0;
-	gpos.h[1] = 0;
-	gpos.h[2] = 0;
-	for(unsigned i = 0;  i < pos->n;  i++)
-		gpos.pegs[pos->pos[i]-1][gpos.h[pos->pos[i]-1]++] = pos->n-i;    /* RoOooOoock! */
-	
-	wclear(playWin);
-	/* Draw the 3 pegs. */
-	for(unsigned i = 0;  i < 3;  i++)
-		mvwvline(playWin, GAP_Y, (2*MAX_N+1+GAP_X)*i + MAX_N, '|', MAX_N);
-	/* Draw the disks. */
-	for(unsigned i = 0;  i < 3;  i++)
-		for(unsigned j = 0;  j < gpos.h[i];  j++)
-			drawDisk(gpos.pegs[i][j], i+1, j+1, true);
-	/*  Show the “cursor”.*/
-	moveCursor(1);
-	wrefresh(playWin);
-}
-
-
-
 void*  ioProc
   (void* self)
 {
@@ -193,8 +26,9 @@ void*  ioProc
 	initscr();
 	/* Input settings. */
 	cbreak();
-	//keypad(stdscr, true);
+	keypad(stdscr, true);
 	//mousemask(BUTTON1_CLICKED, NULL);
+	nodelay(stdscr, true);
 	noecho();
 	curs_set(0);
 	/* Output settings. */
@@ -203,15 +37,16 @@ void*  ioProc
 	for(int i = 0;  i < 8; ++i)    /* 8 color pairs for the disks */
 		init_pair(i+1, i, i);
 	init_pair(10, COLOR_YELLOW, -1);    /* color pairs for statistics */
-	init_pair(11, COLOR_GREEN,  -1);    /* … */
-	init_pair(12, COLOR_RED,    -1);    /* … */
+	init_pair(11, COLOR_RED,    -1);    /* … */
+	init_pair(12, COLOR_GREEN,  -1);    /* … */
 	init_pair(13, COLOR_BLUE,   -1);    /* … */
+	init_pair(20, COLOR_BLACK,   -1);    /* color for drawings (N and pegs) */
 	refresh();
 	
-	playWin = newwin(PLAYWIN_H, PLAYWIN_W, PLAYWIN_Y, PLAYWIN_X);
-	keypad(playWin, true);
-	nodelay(playWin, true);
-	statsWin = newwin(STATSWIN_H, STATSWIN_W, STATSWIN_Y, STATSWIN_X);
+	/* Windows. */
+	initNumWin();
+	initStatsWin();
+	initBoardWin();
 	
 	again = true;
 	while(again) {
@@ -219,19 +54,17 @@ void*  ioProc
 		
 		if(sig) {
 			switch(sig->type) {
-			  case SIG_END:
-				again = false;
-				break;
 			  case SIG_NEWPOS:
 				sendSignal(&brain, sig);
-				updatePosition(&sig->pos);
+				printNumber(sig->pos.n);
+				updateBoard(&sig->pos);
 				break;
 			  case SIG_NEWMOVE:
 				sendSignal(&brain, sig);
 				moveDisk(&sig->mv);
 				break;
 			  case SIG_STATSUPDATE:
-				updateStats(&sig->stats);
+				updateStatistics(&sig->stats);
 				break;
 			  default:
 				break;
@@ -240,44 +73,62 @@ void*  ioProc
 			destroySignal(sig);
 		}
 		
-		c = wgetch(playWin);
+		c = getch();
+		//c = wgetch(boardWin);
 		switch(c) {
+		  /* Quit. */
 		  case 'q':
 			send.type = SIG_END;
 			sendSignal(&brain, &send);
 			again = false;
 			break;
-		  case ' ':
-			toggleSelected();
-			break;
-		  case '4':
-		  case '5':
-		  case '6':
-			moveCursor(c-'3');
-			toggleSelected();
-			break;
-		  case '1':
-		  case '2':
-		  case '3':
-			moveCursor(c-'0');
-			break;
+		  /* Move the “cursor” (under the pegs). */
 		  case KEY_LEFT:
 			moveCursor((sel.cur==1) ? 3 : sel.cur-1);
 			break;
 		  case KEY_RIGHT:
 			moveCursor(sel.cur%3 + 1);
 			break;
+		  case '1':
+		  case '2':
+		  case '3':
+			moveCursor(c-'0');
+			break;
+		  /* Select/release a disk. */
+		  case ' ':
+			toggleSelected();
+			break;
+		  /* Shortcuts to move the cursor and select a disk. */
+		  case '4':
+		  case '5':
+		  case '6':
+			moveCursor(c-'3');
+			toggleSelected();
+			break;
+		  /* Even shorter shortcuts to play a move directly. */
+		  /* FIXME: When a disk is selected, it is ignored… */
+		  /* FIXME: Some segfaults! */
+		  case '7':
+			attemptMove(1,2);    break;
+		  case '8':
+			attemptMove(1,3);    break;
+		  case '9':
+			attemptMove(2,3);    break;
+		  /* Play the next move of the solution. */
+		  /* FIXME: When a disk is selected, it is ignored… */
 		  case 's':
 			send.type = SIG_NEXTMOVE;
 			sendSignal(&brain, &send);
 			break;
+		  case ERR:
 		  default:
 			break;
 		}
 	}
 	
-	delwin(statsWin);
-	delwin(playWin);
+	endNumWin();
+	endStatsWin();
+	endBoardWin();
 	endwin();
 	
 	pthread_exit(NULL);
