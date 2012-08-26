@@ -32,7 +32,7 @@ static char const*  digits[10];
 
 
 void  initNumWin
-	(void)
+  (void)
 {
 	numWin = newwin(NUMWIN_H, NUMWIN_W, NUMWIN_Y, NUMWIN_X);
 	
@@ -43,7 +43,7 @@ void  initNumWin
 
 
 void  endNumWin
-	(void)
+  (void)
 {
 	delwin(numWin);
 }

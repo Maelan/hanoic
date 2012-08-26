@@ -31,11 +31,11 @@ extern WINDOW*  statsWin;
 
 
 void  initStatsWin
-	(void);
+  (void);
 
 
 void  endStatsWin
-	(void);
+  (void);
 
 
 void  updateStatistics

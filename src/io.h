@@ -18,6 +18,7 @@
 #include "hanoic.h"
 #include <ncurses.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 
 

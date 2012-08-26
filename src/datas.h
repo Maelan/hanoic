@@ -31,8 +31,8 @@ typedef struct Move {
 
 /* A position. */
 typedef struct {
-	unsigned n;         /* number of disks */
-	char const* pos;    /* array of numbers from 1 to 3 describing the position */
+	unsigned n;    /* number of disks */
+	char* pos;     /* array of numbers from 1 to 3 describing the position */
 } Position;
 
 

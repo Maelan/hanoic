@@ -31,11 +31,11 @@ extern WINDOW *numWin;
 
 
 void  initNumWin
-	(void);
+  (void);
 
 
 void  endNumWin
-	(void);
+  (void);
 
 
 void  updateNumber
