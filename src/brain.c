@@ -186,26 +186,11 @@ void*  brainProc
 			again = false;
 			break;
 		  case SIG_NEWPOS:
-			/*sol.cur = MAX_MOVES;
-			stats.initial = solve(sig->pos.n, sig->pos.pos, 3);
-			stats.fromNow = MAX_MOVES - sol.cur;
-			stats.done = 0;
-			stats.errors = 0;
-			send.type = SIG_STATSUPDATE;
-			send.stats = stats;
-			sendSignal(&io, &send);*/
 			pos = sig->pos;
 			solvePosition();
 			break;
 		  case SIG_NEWMOVE:
 			updateSolution(&sig->mv);
-			/*stats.done++;
-			if(stats.fromNow-1 != MAX_MOVES - sol.cur)
-				stats.errors++;
-			stats.fromNow = MAX_MOVES - sol.cur;
-			send.type = SIG_STATSUPDATE;
-			send.stats = stats;
-			sendSignal(&io, &send);*/
 			break;
 		  case SIG_NEXTMOVE:
 			if(sol.cur < MAX_MOVES) {
