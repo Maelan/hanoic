@@ -22,7 +22,7 @@ WINDOW*  statsWin = NULL;
 
 
 void  initStatsWin
-	(void)
+  (void)
 {
 	statsWin = newwin(STATSWIN_H, STATSWIN_W, STATSWIN_Y, STATSWIN_X);
 	
@@ -38,7 +38,7 @@ void  initStatsWin
 
 
 void  endStatsWin
-	(void)
+  (void)
 {
 	delwin(statsWin);
 }

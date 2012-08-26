@@ -18,7 +18,11 @@ static Statistics  stats;    /* Uuh? */
 
 
 
-static MoveStack  solution = {
+static Position  pos;
+
+
+
+static MoveStack  sol = {
 	.cur = MAX_MOVES
 };
 
@@ -29,10 +33,10 @@ static MoveStack  solution = {
 static void  addMove
   (int src, int dest/*, unsigned n*/)
 {
-	solution.cur--;
-	solution.mv[solution.cur].src =  src;
-	solution.mv[solution.cur].dest = dest;
-	//solution.mv[solution.cur].n =    n;
+	sol.cur--;
+	sol.mv[sol.cur].src =  src;
+	sol.mv[sol.cur].dest = dest;
+	//sol.mv[sol.cur].n =    n;
 }
 
 
@@ -40,7 +44,7 @@ static void  addMove
 static void  pullMove
   (void)
 {
-	solution.cur++;
+	sol.cur++;
 }
 
 
@@ -101,18 +105,67 @@ static unsigned  solve
 
 
 
-/*  */
+static void  solvePosition
+  (void)
+{
+	static char posbuf[MAX_N];
+	Signal sig;
+	
+	memmove(posbuf, pos.pos, pos.n);
+	pos.pos = posbuf;
+	
+	sol.cur = MAX_MOVES;
+	stats.initial = solve(pos.n, pos.pos, 3);
+	
+	stats.fromNow = MAX_MOVES - sol.cur;
+	stats.done = 0;
+	stats.errors = 0;
+	
+	sig.type = SIG_STATSUPDATE;
+	sig.stats = stats;
+	sendSignal(&io, &sig);
+}
+
+
+
 static void  updateSolution
   (Move const* mv)
 {
-	if(solution.cur < MAX_MOVES  &&  mv->src == solution.mv[solution.cur].src) {
-		if(mv->dest == solution.mv[solution.cur].dest)
+	Signal sig;
+	
+	unsigned i;
+	for(i = pos.n-1;  pos.pos[i] != mv->src;  i--);
+	pos.pos[i] = mv->dest;
+	
+	if(sol.cur < MAX_MOVES  &&  mv->src == sol.mv[sol.cur].src) {
+		if(mv->dest == sol.mv[sol.cur].dest) {
 			pullMove();
-		else
-			solution.mv[solution.cur].src = mv->dest;
+			stats.fromNow--;
+		}
+		else {
+			sol.mv[sol.cur].src = mv->dest;
+			stats.errors++;
+		}
 	}
-	else    /* FIXME: not always optimal… */
-		addMove(mv->dest, mv->src/*, mv->n*/);
+	else {
+		if(sol.cur == MAX_MOVES  ||  mv->dest == sol.mv[sol.cur].src) {
+			addMove(mv->dest, mv->src/*, mv->n*/);
+			stats.fromNow++;
+		}
+		else {
+			sol.cur = MAX_MOVES;
+			solve(pos.n, pos.pos, 3);
+			/* FIXME: If that could be done without computing all the solution
+			   again… */
+			stats.fromNow = MAX_MOVES - sol.cur;
+		}
+		stats.errors++;
+	}
+	
+	stats.done++;
+	sig.type = SIG_STATSUPDATE;
+	sig.stats = stats;
+	sendSignal(&io, &sig);
 }
 
 
@@ -133,29 +186,31 @@ void*  brainProc
 			again = false;
 			break;
 		  case SIG_NEWPOS:
-			solution.cur = MAX_MOVES;
+			/*sol.cur = MAX_MOVES;
 			stats.initial = solve(sig->pos.n, sig->pos.pos, 3);
-			stats.fromNow = MAX_MOVES - solution.cur;
+			stats.fromNow = MAX_MOVES - sol.cur;
 			stats.done = 0;
 			stats.errors = 0;
 			send.type = SIG_STATSUPDATE;
 			send.stats = stats;
-			sendSignal(&io, &send);
+			sendSignal(&io, &send);*/
+			pos = sig->pos;
+			solvePosition();
 			break;
 		  case SIG_NEWMOVE:
 			updateSolution(&sig->mv);
-			stats.done++;
-			if(stats.fromNow-1 != MAX_MOVES - solution.cur)
+			/*stats.done++;
+			if(stats.fromNow-1 != MAX_MOVES - sol.cur)
 				stats.errors++;
-			stats.fromNow = MAX_MOVES - solution.cur;
+			stats.fromNow = MAX_MOVES - sol.cur;
 			send.type = SIG_STATSUPDATE;
 			send.stats = stats;
-			sendSignal(&io, &send);
+			sendSignal(&io, &send);*/
 			break;
 		  case SIG_NEXTMOVE:
-			if(solution.cur < MAX_MOVES) {
+			if(sol.cur < MAX_MOVES) {
 				send.type = SIG_NEWMOVE;
-				send.mv = solution.mv[solution.cur];
+				send.mv = sol.mv[sol.cur];
 				sendSignal(&io, &send);
 			}
 			break;

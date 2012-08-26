@@ -77,7 +77,7 @@ void*  ioProc
 	init_pair(11, COLOR_RED,    -1);    /* … */
 	init_pair(12, COLOR_GREEN,  -1);    /* … */
 	init_pair(13, COLOR_BLUE,   -1);    /* … */
-	init_pair(20, COLOR_BLACK,   -1);    /* color for drawings (N and pegs) */
+	init_pair(20, COLOR_BLACK,  -1);    /* color for drawings (N and pegs) */
 	refresh();
 	
 	/* Windows. */
@@ -87,9 +87,9 @@ void*  ioProc
 	
 	again = true;
 	while(again) {
-		sig = getSignal(self);
+		usleep(10000);    /* Mercy for our CPU! */
 		
-		if(sig) {
+		while( (sig = getSignal(self)) ) {
 			switch(sig->type) {
 			  case SIG_NEWPOS:
 				sendSignal(&brain, sig);
@@ -111,7 +111,6 @@ void*  ioProc
 		}
 		
 		c = getch();
-		//c = wgetch(boardWin);
 		switch(c) {
 		  
 		  /* Quit. */
@@ -162,8 +161,6 @@ void*  ioProc
 			toggleSelected();
 			break;
 		  /* Even shorter shortcuts to play a move directly. */
-		  /* FIXME: When a disk is selected, it is ignored… */
-		  /* FIXME: Some segfaults! */
 		  case '7':
 			attemptMove(1,2);    break;
 		  case '8':
@@ -172,8 +169,8 @@ void*  ioProc
 			attemptMove(2,3);    break;
 		  
 		  /* Play the next move of the solution. */
-		  /* FIXME: When a disk is selected, it is ignored… */
 		  case 's':
+			cancelSelection();
 			send.type = SIG_NEXTMOVE;
 			sendSignal(&brain, &send);
 			break;

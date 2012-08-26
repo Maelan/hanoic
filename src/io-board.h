@@ -60,7 +60,7 @@ void  initBoardWin
 
 
 void  endBoardWin
-	(void);
+  (void);
 
 
 void  updateBoard
@@ -85,6 +85,10 @@ void  moveCursor
 
 
 void  selectDisk
+  (void);
+
+
+void  cancelSelection
   (void);
 
 

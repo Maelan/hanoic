@@ -13,6 +13,7 @@
 
 #include "hanoic.h"
 #include <stdbool.h>
+#include <string.h>
 
 
 

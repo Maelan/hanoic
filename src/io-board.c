@@ -38,8 +38,6 @@ void  initBoardWin
   (void)
 {
 	boardWin = newwin(BOARDWIN_H, BOARDWIN_W, BOARDWIN_Y, BOARDWIN_X);
-	/*keypad(boardWin, true);
-	nodelay(boardWin, true);*/
 	
 	wattron(boardWin, COLOR_PAIR(20));
 }
@@ -47,7 +45,7 @@ void  initBoardWin
 
 
 void  endBoardWin
-	(void)
+  (void)
 {
 	delwin(boardWin);
 }
@@ -150,6 +148,17 @@ void  selectDisk
 
 
 
+void  cancelSelection
+  (void)
+{
+	if(sel.n) {
+		moveCursor(sel.orig);
+		releaseDisk();
+	}
+}
+
+
+
 void  releaseDisk
   (void)
 {
@@ -189,8 +198,12 @@ void  attemptMove
 {
 	Signal sig;
 	Move mv;
-	unsigned n1 = (gpos.h[peg1-1]) ? gpos.pegs[peg1-1][gpos.h[peg1-1]-1] : MAX_N+1,
-	         n2 = (gpos.h[peg2-1]) ? gpos.pegs[peg2-1][gpos.h[peg2-1]-1] : MAX_N+1;
+	unsigned n1, n2;
+	
+	cancelSelection();
+	
+	n1 = (gpos.h[peg1-1]) ? gpos.pegs[peg1-1][gpos.h[peg1-1]-1] : MAX_N+1,
+	n2 = (gpos.h[peg2-1]) ? gpos.pegs[peg2-1][gpos.h[peg2-1]-1] : MAX_N+1;
 	
 	if(n1 == n2)          /* nothing (both pegs are empty) */
 		return;
