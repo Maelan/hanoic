@@ -90,6 +90,38 @@ static void  resetPosition
 
 
 
+static void queryNextMove
+  (void)
+{
+	Signal send;
+	
+	if(sel.n)
+		cancelSelection();
+	
+	send.type = SIG_QUERYNEXTMOVE;
+	sendSignal(&brain, &send);
+}
+
+
+static Thread  querySolutionThread;
+static bool solutionRunning = false;
+
+static void*  querySolutionProc
+  (void* self)
+{
+	solutionRunning = true;
+	
+	while(1) {
+		queryNextMove();
+		usleep(800000LL);
+	}
+	
+	solutionRunning = false;
+	pthread_exit(NULL);
+}
+
+
+
 void*  ioProc
   (void* self)
 {
@@ -141,6 +173,9 @@ void*  ioProc
 			  case SIG_STATSUPDATE:
 				updateStatistics(&sig->stats);
 				break;
+			  case SIG_SOLUTIONEND:
+				endThread(&querySolutionThread);
+				solutionRunning = false;
 			  default:
 				break;
 			}
@@ -207,13 +242,20 @@ void*  ioProc
 		  case '9':
 			attemptMove(2,3);    break;
 		  
-		  /* Play the next move of the solution. */
+		  /* Play the next move of the solution, or the entire solution. */
 		  case 's':
-			if(sel.n)
-				cancelSelection();
-			send.type = SIG_NEXTMOVE;
-			sendSignal(&brain, &send);
+			queryNextMove();
 			break;
+		  case 'S':
+			/*send.type = SIG_QUERYSOLUTION;
+			sendSignal(&brain, &send);*/
+			if(!solutionRunning)
+				startThread(&querySolutionThread, querySolutionProc);
+			else {
+				endThread(&querySolutionThread);
+				solutionRunning = false;
+			}
+		  
 		  case ERR:
 		  default:
 			break;

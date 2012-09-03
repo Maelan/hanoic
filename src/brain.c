@@ -170,11 +170,27 @@ static void  updateSolution
 
 
 
+static void  giveNextMove
+  (void)
+{
+	Signal send;
+	
+	if(sol.cur < MAX_MOVES) {
+		send.type = SIG_NEWMOVE;
+		send.mv = sol.mv[sol.cur];
+	}
+	else
+		send.type = SIG_SOLUTIONEND;
+	
+	sendSignal(&io, &send);
+}
+
+
+
 void*  brainProc
   (void* self)
 {
 	Signal* sig;
-	Signal send;
 	bool again;
 	
 	again = true;
@@ -192,12 +208,8 @@ void*  brainProc
 		  case SIG_NEWMOVE:
 			updateSolution(&sig->mv);
 			break;
-		  case SIG_NEXTMOVE:
-			if(sol.cur < MAX_MOVES) {
-				send.type = SIG_NEWMOVE;
-				send.mv = sol.mv[sol.cur];
-				sendSignal(&io, &send);
-			}
+		  case SIG_QUERYNEXTMOVE:
+			giveNextMove();
 			break;
 		  default:
 			break;
