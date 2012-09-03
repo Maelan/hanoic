@@ -19,10 +19,15 @@
 
 
 
+#define  DIGIT_HEIGHT     7
+#define  DIGIT_MAXWIDTH  11
+
+
+
 #define  NUMWIN_X   0
 #define  NUMWIN_Y   0
-#define  NUMWIN_W  13
-#define  NUMWIN_H   7
+#define  NUMWIN_W  (2*DIGIT_MAXWIDTH)
+#define  NUMWIN_H   DIGIT_HEIGHT
 
 
 
