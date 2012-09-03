@@ -63,8 +63,20 @@ void  endBoardWin
   (void);
 
 
+void  drawBoard
+  (void);
+
+
+void  updateBoardDatas
+  (Position const* pos);
+
+
 void  updateBoard
   (Position const* pos);
+
+
+void  clearBoard
+  (void);
 
 
 
@@ -80,8 +92,16 @@ void  moveDisk
   (Move const* mv);
 
 
+void  unstackDisk
+  (unsigned peg);
+
+
+void  stackDisk
+  (unsigned peg);
+
+
 void  moveCursor
-  (unsigned newCur);
+  (unsigned peg);
 
 
 void  selectDisk

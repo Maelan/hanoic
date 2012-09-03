@@ -52,17 +52,9 @@ void  endBoardWin
 
 
 
-void  updateBoard
-  (Position const* pos)
+void  drawBoard
+  (void)
 {
-	/* Update the datas. */
-	gpos.n = pos->n;
-	gpos.h[0] = 0;
-	gpos.h[1] = 0;
-	gpos.h[2] = 0;
-	for(unsigned i = 0;  i < pos->n;  i++)
-		gpos.pegs[pos->pos[i]-1][gpos.h[pos->pos[i]-1]++] = pos->n-i;    /* RoOooOoock! */
-	
 	wclear(boardWin);
 	overlay(numWin, boardWin);
 	
@@ -77,6 +69,39 @@ void  updateBoard
 	moveCursor(1);
 	
 	wrefresh(boardWin);
+}
+
+
+
+void  updateBoardDatas
+  (Position const* pos)
+{
+	/* Update the datas. */
+	gpos.n = pos->n;
+	gpos.h[0] = 0;
+	gpos.h[1] = 0;
+	gpos.h[2] = 0;
+	for(unsigned i = 0;  i < pos->n;  i++)
+		gpos.pegs[pos->pos[i]-1][gpos.h[pos->pos[i]-1]++] = pos->n-i;    /* RoOooOoock! */
+}
+
+
+
+void  updateBoard
+  (Position const* pos)
+{
+	updateBoardDatas(pos);
+	drawBoard();
+}
+
+
+void  clearBoard
+  (void)
+{
+	gpos.h[0] = 0;
+	gpos.h[1] = 0;
+	gpos.h[2] = 0;
+	drawBoard();
 }
 
 
@@ -121,14 +146,32 @@ void  moveDisk
 
 
 
-void  moveCursor
-  (unsigned newCur)
+void  unstackDisk
+  (unsigned peg)
 {
-	mvwhline(boardWin, BOARDWIN_H-1, (2*MAX_N+1+GAP_X)*(sel.cur-1), ' ', 2*MAX_N+1);
-	mvwhline(boardWin, BOARDWIN_H-1, (2*MAX_N+1+GAP_X)*(newCur-1), ':', 2*MAX_N+1);
-	wrefresh(boardWin);
+	if(!gpos.h[peg-1])
+		return;
 	
-	sel.cur = newCur;
+	sel.orig = peg;
+	sel.n = gpos.pegs[peg-1][gpos.h[peg-1]-1];
+	gpos.h[peg-1]--;
+	
+	teleportDisk(sel.n, peg, gpos.h[peg-1]+1, peg, MAX_N+GAP_Y);
+}
+
+
+
+void  stackDisk
+  (unsigned peg)
+{
+	if(gpos.h[peg-1]  &&  sel.n > gpos.pegs[peg-1][gpos.h[peg-1]-1])
+		return;
+	
+	teleportDisk(sel.n, sel.orig, MAX_N+GAP_Y, peg, gpos.h[peg-1]+1);
+	
+	gpos.pegs[peg-1][gpos.h[peg-1]] = sel.n;
+	gpos.h[peg-1]++;
+	sel.n = 0;
 }
 
 
@@ -136,14 +179,7 @@ void  moveCursor
 void  selectDisk
   (void)
 {
-	if(!gpos.h[sel.cur-1])
-		return;
-	
-	sel.orig = sel.cur;
-	sel.n = gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1];
-	gpos.h[sel.cur-1]--;
-	
-	teleportDisk(sel.n, sel.cur, gpos.h[sel.cur-1]+1, sel.cur, MAX_N+GAP_Y);
+	unstackDisk(sel.cur);
 }
 
 
@@ -151,10 +187,7 @@ void  selectDisk
 void  cancelSelection
   (void)
 {
-	if(sel.n) {
-		moveCursor(sel.orig);
-		releaseDisk();
-	}
+	stackDisk(sel.orig);
 }
 
 
@@ -162,10 +195,7 @@ void  cancelSelection
 void  releaseDisk
   (void)
 {
-	if(gpos.h[sel.cur-1]  &&  sel.n > gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]-1])
-		return;
-	
-	teleportDisk(sel.n, sel.orig, MAX_N+GAP_Y, sel.cur, gpos.h[sel.cur-1]+1);
+	stackDisk(sel.cur);
 	
 	if(sel.cur != sel.orig) {
 		Signal sig = {
@@ -174,10 +204,6 @@ void  releaseDisk
 		};
 		sendSignal(&brain, &sig);
 	}
-	
-	gpos.pegs[sel.cur-1][gpos.h[sel.cur-1]] = sel.n;
-	gpos.h[sel.cur-1]++;
-	sel.n = 0;
 }
 
 
@@ -193,6 +219,18 @@ void  toggleSelected
 
 
 
+void  moveCursor
+  (unsigned peg)
+{
+	mvwhline(boardWin, BOARDWIN_H-1, (2*MAX_N+1+GAP_X)*(sel.cur-1), ' ', 2*MAX_N+1);
+	mvwhline(boardWin, BOARDWIN_H-1, (2*MAX_N+1+GAP_X)*(peg-1), ':', 2*MAX_N+1);
+	wrefresh(boardWin);
+	
+	sel.cur = peg;
+}
+
+
+
 void  attemptMove
   (unsigned peg1, unsigned peg2)
 {
@@ -200,7 +238,8 @@ void  attemptMove
 	Move mv;
 	unsigned n1, n2;
 	
-	cancelSelection();
+	if(sel.n)
+		cancelSelection();
 	
 	n1 = (gpos.h[peg1-1]) ? gpos.pegs[peg1-1][gpos.h[peg1-1]-1] : MAX_N+1,
 	n2 = (gpos.h[peg2-1]) ? gpos.pegs[peg2-1][gpos.h[peg2-1]-1] : MAX_N+1;

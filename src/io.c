@@ -38,12 +38,50 @@ static void  randomPosition
 
 
 
+static void   manualPosition
+  (Position* pos)
+{
+	static char posbuf[MAX_N];
+	int c;
+	
+	pos->pos = posbuf;
+	
+	clearBoard();
+	pos->n = gpos.n;
+	
+	nodelay(stdscr, false);
+	for(unsigned i = pos->n;  i;  i--) {
+		gpos.pegs[1][gpos.h[1]++] = i;
+		unstackDisk(2);
+		do
+			c = getch();
+		while(c < '1' || c > '3');
+		pos->pos[pos->n-i] = c-'0';
+		stackDisk(c-'0');
+	}
+	nodelay(stdscr, true);
+}
+
+
+
 static void  resetPosition
   (char mode)
 {
 	Signal sig;
 	
-	((mode == 'i') ? initialPosition:randomPosition) (&sig.pos);
+	switch(mode) {
+	  case 'i':
+		initialPosition(&sig.pos);
+		break;
+	  case 'r':
+		randomPosition(&sig.pos);
+		break;
+	  case 'm':
+		manualPosition(&sig.pos);
+		break;
+	  default:
+		break;
+	}
 	
 	sig.type = SIG_NEWPOS;
 	sendSignal(&brain, &sig);
@@ -120,9 +158,10 @@ void*  ioProc
 			again = false;
 			break;
 		  
-		  /* Initial or random position. */
+		  /* Initial, random or manual position. */
 		  case 'i':
 		  case 'r':
+		  case 'm':
 			resetPosition(c);
 			break;
 		  /* Changing N. */
@@ -170,7 +209,8 @@ void*  ioProc
 		  
 		  /* Play the next move of the solution. */
 		  case 's':
-			cancelSelection();
+			if(sel.n)
+				cancelSelection();
 			send.type = SIG_NEXTMOVE;
 			sendSignal(&brain, &send);
 			break;
