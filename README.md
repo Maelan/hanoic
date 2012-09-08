@@ -4,9 +4,9 @@ hanoic
 [wiki]: http://en.wikipedia.org/wiki/Tower_of_Hanoi "Tower of Hanoi"
 [algo]: http://sciences.siteduzero.com/forum-83-694709-p24.html#r7525181 "algorithm explanation and proof"
 
-[img1]: tree/master/screenshots/screenshot1.png
-[img2]: tree/master/screenshots/screenshot2.png
-[img3]: tree/master/screenshots/screenshot3.png
+[img1]: https://raw.github.com/Maelan/hanoic/master/screenshots/screenshot1.png "the classical initial position with 6 disks"
+[img2]: https://raw.github.com/Maelan/hanoic/master/screenshots/screenshot2.png "some random position"
+[img3]: https://raw.github.com/Maelan/hanoic/master/screenshots/screenshot3.png "the wanted final position"
 
 **hanoic** is an incredible, colorful, interactive console program allowing you to play and solve the **[Tower of Hanoi][wiki]** puzzle. You can setup an initial position, try to solve it, and see the best solution from the current position.
 
