@@ -34,28 +34,29 @@ Now, let consider a disk *k*. There are two cases:
 - P<sub>*k*</sub> = Q. The disk is already where we want it to be. In that case, we just have to move the *k*-1 first disks onto Q.
 - P<sub>*k*</sub> ≠ Q. We have to move that disk. To achieve this goal, we first must move all the *k*-1 first disks onto R (because, to be able to move the disk *k* from P<sub>*k*</sub> to Q, there must not be disks over it, nor disks smaller than it on Q). Then, we move the disk *k* from P<sub>*k*</sub> to Q. After that, we continue solving the position by moving the *k*-1 first disks onto Q. This last step is well-known because it corresponds to the classical position: all the disks to be moved are stacked on the same peg. We know that this step will take 2<sup>*k*-1</sup>-1 moves (the prove for that particular case is similar than the one being done here, and can be found easily across the web).
 
-In both cases, the solution is optimal, because the explanation show us we can not do better: in the second case, we **have to** move the disk *k* from P<sub>*k*</sub> to Q, and for that we first **have to** move move the *k*-1 smaller disks onto R.
+In both cases, the solution is optimal, because the explanation show us we can not do better: in the second case, we **have to** move the disk *k* from P<sub>*k*</sub> to Q, and for that we first **have to** move the *k*-1 smaller disks onto R.
 
 It leads us to a recursive solving algorithm. And, if you ask, we also have a recursive definition for *t*<sub>*k*</sub>(P):
 > *t*<sub>0</sub>(Q) = 0
+> 
 > *t*<sub>*k*</sub>(Q) =
->
-> - *t*<sub>*k*-1</sub>(Q)    if P<sub>*k*</sub> = Q,
+> 
+> - *t*<sub>*k*-1</sub>(Q)             if P<sub>*k*</sub> = Q,
 > - *t*<sub>*k*-1</sub>(R) + 2<sup>*k*-1</sup>    otherwise.
 
 The second formula is the simplification of *t*<sub>*k*-1</sub>(R) + 1 + (2<sup>*k*-1</sup>-1).
 
 It appears that *t*<sub>*n*</sub>(Q) is a sum of powers of two: we add 2<sup>*k*-1</sup> if (and only if) the disk *k* is not *well-placed*. We could write *t*<sub>*n*</sub> like that:
-> *t*<sub>*n*</sub> = ∑<sub>*k*=1</sub><sup>*n*</sup>  *b*<sub>*k*</sub> 2<sup>*k*-1</sup>
+> *t*<sub>*n*</sub>  =  ∑<sub>*k*=1</sub><sup>*n*</sup>  *b*<sub>*k*</sub> 2<sup>*k*-1</sup>
 
 where the *b*<sub>*k*</sub> are booleans: 1 if the disk *k* is well-placed, 0 otherwise. Whether a disk is well-placed or not depends on its position and what we want to do with the larger disks, according to the algorithm we just defined.
 
 #### The worst case(s)
 
-This brings us to a description of the worst case. In such a case, the number of moves is maximal, that involve that no disk is well-placed. Thus, we have
-> *t*<sub>*n*</sub> = ∑<sub>*k*=1</sub><sup>*n*</sup>  2<sup>*k*-1</sup> = 2<sup>*n*</sup> - 1.
+This brings us to a description of the worst case. In such a case, the number of moves is maximal, which involves that no disk is well-placed. Thus, we have
+> *t*<sub>*n*</sub>  =  ∑<sub>*k*=1</sub><sup>*n*</sup>  2<sup>*k*-1</sup>  =  2<sup>*n*</sup> - 1.
 
-We remark that this is also the minimal number of moves when all the disks initially stand on the same peg. Indeed: is all the disks are on peg 1, and we want them on peg 3, then the disk *n* has to move onto peg 3; but for that, the disk *n*-1 must go on peg 2, which need the disk *n*-2 to be on peg 3… Finally, every disk must move.
+We remark that this is also the minimal number of moves when all the disks initially stand on the same peg. Indeed: if all the disks are on peg 1, and we want them on peg 3, then the disk *n* has to move onto peg 3; but for that, the disk *n*-1 must go on peg 2, which need the disk *n*-2 to be on peg 3… Finally, every disk must move.
 
 But other cases exist. Now we are in, what about counting them? In order for disk *k* not to be well-placed, we have two possibilities (since there are three pegs, and only one correct place). Finally, there are 2<sup>*n*</sup> positions in which each of the *n* disks is not well-placed. Moreover, there exists 3<sup>*n*</sup> different positions. So, randomly mixing the disks has a probability of (2/3)<sup>*n*</sup> to lead to a worst case (which decrease when *n* increases).
 
