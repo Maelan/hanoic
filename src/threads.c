@@ -4,7 +4,6 @@
 ***    module:   threads  −  source file
 ***    function: Threads management.
 ***    author:   Maëlan (aka Maëlan44)
-***              (see < http://www.siteduzero.com/membres-294-232877.html >)
 ***
 **/
 

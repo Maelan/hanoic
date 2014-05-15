@@ -5,7 +5,6 @@
 ***    function: The interaction module (thread), which listen what the user do
 ***              and draw beautiful things onto the screen.
 ***    author:   Maëlan (aka Maëlan44)
-***              (see < http://www.siteduzero.com/membres-294-232877.html >)
 ***
 **/
 

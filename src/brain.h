@@ -4,7 +4,6 @@
 ***    module:   brain  −  header file
 ***    function: The brain, i.e. the part (thread) which compute things.
 ***    author:   Maëlan (aka Maëlan44)
-***              (see < http://www.siteduzero.com/membres-294-232877.html >)
 ***
 **/
 

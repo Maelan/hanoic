@@ -4,7 +4,6 @@
 ***    module:   hanoic  −  source file
 ***    function: The main program.
 ***    author:   Maëlan (aka Maëlan44)
-***              (see < http://www.siteduzero.com/membres-294-232877.html >)
 ***
 **/
 

@@ -6,7 +6,6 @@
 ***    function: Type and constant definitions used by the other parts of the
 ***              program.
 ***    author:   Maëlan (aka Maëlan44)
-***              (see < http://www.siteduzero.com/membres-294-232877.html >)
 ***
 **/
 
